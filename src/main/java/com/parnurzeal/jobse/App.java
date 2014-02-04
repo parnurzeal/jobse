@@ -92,10 +92,11 @@ class InvertedIndex{
       "what", "when", "where", "which", "while", "who", "whom", "why",
       "will", "with", "would", "yet", "you", "your");
   HashMap<String, List<Tuple>> index;
-  HashMap<String, Object> data;
+  HashMap<Integer, Object> data;
   
   public InvertedIndex(){
     index = new HashMap<String, List<Tuple>>();
+    data = new HashMap<Integer, Object>();
   }
   
   public static void print(){
@@ -116,9 +117,23 @@ class InvertedIndex{
     for(int i = 0;i<10&&i<job_desc_array.length;i++) key+=job_desc_array[i];
     return key.hashCode();
   }
+  public boolean checkDuplicate(Object obj){
+    if(data.get(makeKey(obj))!=null)
+      return true;
+    return false;
+  }
   
   public boolean add(Object obj){
-    System.out.println("Key: "+makeKey(obj));
+    int obj_key = makeKey(obj);
+    // Check no dulicated data 
+    if(checkDuplicate(obj)){
+      System.out.println("Duplicated key: "+obj_key + "(Won't index)");
+      return false;
+    }
+    System.out.println("Index key: "+ obj_key);
+    // Add to data list
+    data.put(obj_key,obj);
+    // Start index object
     JSONObject js_obj = (JSONObject)obj;
     String desc= (String)js_obj.get("job_description");
     String delimiters = "[^a-zA-Z0-9]+";
@@ -147,10 +162,15 @@ class InvertedIndex{
         }
       }
       System.out.println("Query: " + w);
-      System.out.print("Answer:");
+      System.out.println("Answer:");
+      JSONObject js_obj = new JSONObject();
+      js_obj.put("numFound",answer.size());
+      JSONArray js_results = new JSONArray();
       for(Integer out: answer){
-        System.out.print(" "+out);
+        js_results.add(data.get(out));
       }
+      js_obj.put("docs",js_results);
+      System.out.println(js_obj);
     }
   }
 }  
