@@ -4,6 +4,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.IOException;
 import org.json.simple.JSONArray;
@@ -29,23 +30,47 @@ public class App
       java.util.Scanner s = new Scanner(is).useDelimiter("\\A");
       return s.hasNext()?s.next():"";
     }
+    public static void listFilesInFolder(final File folder, ArrayList<String> result){
+       for(File fileEntry : folder.listFiles()){
+        if(fileEntry.isDirectory()){
+          listFilesInFolder(fileEntry,result);
+        }else{
+          result.add(fileEntry.getAbsolutePath());
+        }
+       }
+    }
+    
     public static void main( String[] args )
     {
-        InputStream is = App.class.getResourceAsStream("/rakuten1.job");
+      InvertedIndex inverted_index = new InvertedIndex();
+
+      ArrayList<String> allFiles = new ArrayList<String>();
+      File folder = new File(args[0]);
+      listFilesInFolder(folder, allFiles); 
+      //InputStream is = App.class.getResourceAsStream("./rakuten1.job");
+      for(String file:allFiles){
+        InputStream is = null;
+        try{
+          System.out.println(file);
+          is =new FileInputStream(file);
+        }catch(FileNotFoundException fe){
+          System.out.println(fe);
+        }
         String text = convertStreamToString(is);
         JSONParser parser = new JSONParser();
 
-        InvertedIndex inverted_index = new InvertedIndex();
         try{ 
           Object obj = parser.parse(text);
-          System.out.println(obj);
           inverted_index.add(obj);
-          List<String> query = new LinkedList<String>();
-          query.add("identifying");
-          inverted_index.search(query);
         }catch(ParseException pe){
           System.out.println(pe);
         }
+      }
+      // Search
+      List<String> query = new LinkedList<String>();
+      query.add("identifying");
+      inverted_index.search(query);
+
     }
 }
 
